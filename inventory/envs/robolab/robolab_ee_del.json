@@ -1,0 +1,135 @@
+{
+    "robot_type": "droid_franka_robotiq",
+    "robot_class": "arm7g1",
+    "backend": "isaaclab",
+    "control_rate": 15,
+    "features": {
+        "observation/exterior_image_1_left": {
+            "role": "observation",
+            "type": "rgb",
+            "dtype": "image",
+            "state_representation": "HWC",
+            "shape": [
+                360,
+                640,
+                3
+            ],
+            "names": [
+                "height",
+                "width",
+                "channel"
+            ],
+            "stats": {
+                "min": 0,
+                "max": 255,
+                "mean": null,
+                "std": null
+            },
+            "comment": "DROID exterior camera (over_shoulder_left). Third-person scene view; first by camera-order convention (maps to the policy's primary/exterior slot). Native 720x1280, aspect-preserving downscaled (long edge capped at 640) by the bridge \u2014 NO square squash, so the policy's resize_with_pad to 224 stays distortion-free. Shape is advisory (the agent reads the real array shape); dtype 'image' is the runtime sentinel; the wire payload is uint8 HWC RGB."
+        },
+        "observation/wrist_image_left": {
+            "role": "observation",
+            "type": "rgb",
+            "dtype": "image",
+            "state_representation": "HWC",
+            "shape": [
+                360,
+                640,
+                3
+            ],
+            "names": [
+                "height",
+                "width",
+                "channel"
+            ],
+            "stats": {
+                "min": 0,
+                "max": 255,
+                "mean": null,
+                "std": null
+            },
+            "comment": "DROID wrist camera (Robotiq base_link/wrist_cam, focal 2.8 \u2014 calibrated to pi05/DreamZero). Native 720x1280, aspect-preserving downscaled (long edge capped at 640) by the bridge \u2014 NO square squash; the policy resize_with_pads to 224. Shape is advisory; wire payload is uint8 HWC RGB."
+        },
+        "observation/state": {
+            "role": "observation",
+            "type": "joint_pos",
+            "state_type": "JOINT_ABS_POS",
+            "state_representation": "REAL",
+            "dtype": "float32",
+            "units": "rad",
+            "shape": [
+                8
+            ],
+            "order": "0-7",
+            "names": [
+                "panda_joint1",
+                "panda_joint2",
+                "panda_joint3",
+                "panda_joint4",
+                "panda_joint5",
+                "panda_joint6",
+                "panda_joint7",
+                "gripper.opening"
+            ],
+            "limits": {
+                "min": [
+                    -2.8973,
+                    -1.7628,
+                    -2.8973,
+                    -3.0718,
+                    -2.8973,
+                    -0.0175,
+                    -2.8973,
+                    0.0
+                ],
+                "max": [
+                    2.8973,
+                    1.7628,
+                    2.8973,
+                    -0.0698,
+                    2.8973,
+                    3.7525,
+                    2.8973,
+                    1.0
+                ]
+            },
+            "stats": {
+                "min": [],
+                "max": [],
+                "mean": null,
+                "std": null
+            },
+            "comment": "Joint-space proprio (RoboLab ProprioceptionObservationCfg arm_joint_pos + gripper_pos): elems 0-6 are 7 Panda arm joints (REAL rad), elem 7 is the gripper opening (state_representation NORM01: 0=open, 1=closed, dimensionless). All JOINT_ABS_POS, so kept as one runtime feature; the per-quantity split (arm REAL vs gripper NORM01) is spelled out in demos/contracts/envs/droid.json. Normalization is policy-side (null)."
+        },
+        "action": {
+            "role": "action",
+            "type": "ee_del",
+            "state_type": "EE_DEL_POSE",
+            "state_representation": "XYZ_EULXYZ",
+            "frame": "base",
+            "dtype": "float32",
+            "units": "m",
+            "shape": [
+                7
+            ],
+            "order": "0-6",
+            "names": [
+                "delta_eef_pos.dx",
+                "delta_eef_pos.dy",
+                "delta_eef_pos.dz",
+                "delta_eef_rot.droll",
+                "delta_eef_rot.dpitch",
+                "delta_eef_rot.dyaw",
+                "gripper.open_close"
+            ],
+            "stats": {
+                "min": [],
+                "max": [],
+                "mean": null,
+                "std": null
+            },
+            "comment": "Optional branch: RoboLab DroidRelIKActionCfg (differential IK, use_relative_mode pose, scale 0.5, body_name=base_link). Elems 0-2 = delta position (XYZ m), 3-5 = delta orientation (OPEN: euler XYZ droll/dpitch/dyaw per IsaacLab relative-pose convention; rad), 6 = binary gripper (NORM01). Selected by --control ee_del."
+        }
+    },
+    "comment": "RoboLab (NVIDIA Isaac Lab) DROID embodiment: Franka Panda (7-DoF, arm7g1) + Robotiq 2F-85, ~15 Hz (sim dt 1/120, decimation 8), differential-IK relative pose control (DroidRelIKActionCfg, use_relative_mode, scale 0.5, body_name=base_link). Runtime contract: same structure as the libero/simpler wire contracts, enriched with the spec_v0 semantic layer. mean/std null: normalization is policy-side. One complete contract per control mode (spec_v0 \u00a75): --control ee_del selects this file; siblings: robolab_joint_pos.json (default), robolab_ee_abs.json."
+}

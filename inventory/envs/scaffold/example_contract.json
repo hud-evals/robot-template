@@ -1,0 +1,28 @@
+{
+    "robot_type": "my_fictional_arm",
+    "control_rate": 20,
+    "features": {
+        "observation/image": {
+            "role": "observation",
+            "type": "rgb",
+            "dtype": "image",
+            "shape": [128, 128, 3],
+            "names": ["height", "width", "channel"]
+        },
+        "observation/state": {
+            "role": "observation",
+            "type": "ee_abs",
+            "dtype": "float32",
+            "shape": [4],
+            "names": ["eef_x", "eef_y", "eef_z", "gripper"]
+        },
+        "action": {
+            "role": "action",
+            "type": "ee_del",
+            "dtype": "float32",
+            "shape": [4],
+            "names": ["d_x", "d_y", "d_z", "gripper"]
+        }
+    },
+    "comment": "Minimal-but-complete contract for a fictional 1-camera arm. LOAD-BEARING: every feature needs `role` (splits obs vs action); image observations need `type` in {rgb,bgr,gray,depth} or they're mistaken for the state. Everything else (control_rate, dtype, shape, names) is DESCRIPTIVE — not enforced — but include it so the trace viewer can label/display your obs and action slices. Feature keys must match VERBATIM the keys your bridge returns from get_observation (and `action` is the single action feature). Full field reference: https://docs.hud.ai/v6/core/robots#the-contract"
+}

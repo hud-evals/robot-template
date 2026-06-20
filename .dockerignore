@@ -1,0 +1,28 @@
+# Git
+.git
+.gitignore
+
+# Python / venvs
+__pycache__/
+*.py[cod]
+.venv
+
+# Tooling / OS
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+.vscode/
+.idea/
+
+# HUD local state
+.hud/
+.hud_eval.toml
+
+# Sim / recording artifacts
+datasets/
+telemetry-dump/
+*.mp4
+
+# Env / secrets
+.env
+.env.*

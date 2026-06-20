@@ -1,0 +1,94 @@
+{
+    "robot_type": "widowx_simpler",
+    "backend": "maniskill3",
+    "control_rate": 5,
+    "sim_rate": 500,
+    "features": {
+        "observation/image": {
+            "role": "observation",
+            "type": "rgb",
+            "dtype": "image",
+            "shape": [
+                480,
+                640,
+                3
+            ],
+            "names": [
+                "height",
+                "width",
+                "channel"
+            ],
+            "stats": {
+                "min": 0,
+                "max": 255,
+                "mean": null,
+                "std": null
+            }
+        },
+        "observation/state": {
+            "role": "observation",
+            "type": "ee_abs",
+            "dtype": "float32",
+            "shape": [
+                8
+            ],
+            "names": [
+                "eef_pos.x",
+                "eef_pos.y",
+                "eef_pos.z",
+                "eef_axis_angle.rx",
+                "eef_axis_angle.ry",
+                "eef_axis_angle.rz",
+                "gripper.qpos1",
+                "gripper.qpos2"
+            ],
+            "stats": {
+                "min": [],
+                "max": [],
+                "mean": null,
+                "std": null
+            },
+            "comment": "Absolute base-frame end-effector pose proprio (mirrors LIBERO's ee_abs state): position (3) + axis-angle (3) from the WidowX EE pose, plus the 2 finger qpos. Normalization is policy-side (null)."
+        },
+        "action": {
+            "role": "action",
+            "type": "ee_del",
+            "dtype": "float32",
+            "shape": [
+                7
+            ],
+            "names": [
+                "delta_eef_pos.dx",
+                "delta_eef_pos.dy",
+                "delta_eef_pos.dz",
+                "delta_eef_axis_angle.drx",
+                "delta_eef_axis_angle.dry",
+                "delta_eef_axis_angle.drz",
+                "gripper.open_close"
+            ],
+            "stats": {
+                "min": [
+                    -1.0,
+                    -1.0,
+                    -1.0,
+                    -1.5707963,
+                    -1.5707963,
+                    -1.5707963,
+                    -1.0
+                ],
+                "max": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.5707963,
+                    1.5707963,
+                    1.5707963,
+                    1.0
+                ],
+                "mean": null,
+                "std": null
+            }
+        }
+    },
+    "comment": "SimplerEnv (SIMPLER, CoRL'24) WidowX/Bridge real2sim eval on ManiSkill3, native delta EE control: the action is the 7-DoF arm_pd_ee_target_delta_pose_align2 EE delta (ee_del); fixed ee_abs state proprio. Single external 3rd_view_camera RGB (480x640, no wrist cam), 5 Hz over a ~500 Hz sim. mean/std are null: normalization is policy-side. One complete contract per control mode (spec_v0 \u00a75): use_delta=True (BENCH_CONTROL=delta, the default) selects this file; the absolute sibling is simpler_ee_abs.json."
+}

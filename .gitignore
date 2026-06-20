@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+.DS_Store
+.claude/
+
+# Sim / recording artifacts
+datasets/
+telemetry-dump/
+*.mp4
+
+# Env / secrets
+.env
+.env.*
+
+# HUD local state (deploy link + eval scratch), account-specific
+.hud/
+.hud_eval.toml
