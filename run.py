@@ -64,7 +64,9 @@ async def main(args: argparse.Namespace) -> None:
     if args.full:  # the whole benchmark from the checked-in full_bench_tasks.json
         tasks = load_bench(None if args.suite == "all" else args.suite)
     else:
-        tasks = make_tasks(suite=args.suite, n=args.group, init_state_id=args.init_state)
+        # Default to filling the batch when --batched is set, else 3 (`--group` overrides).
+        n = args.group if args.group is not None else (args.batched or 3)
+        tasks = make_tasks(suite=args.suite, n=n, init_state_id=args.init_state)
     # RemoteModel is one request per env (not batchable); local runs can fill a batch.
     max_concurrent = args.batched if (args.batched and not args.remote) else 1
     print(f"{len(tasks)} rollout(s) of {args.suite} (policy: {policy})\n", flush=True)
@@ -83,7 +85,7 @@ async def main(args: argparse.Namespace) -> None:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="SmolVLA x LIBERO; report a success rate.")
     ap.add_argument("--suite", default="libero_spatial", help="LIBERO task suite, or 'all' with --full (see environment/tasks.py)")
-    ap.add_argument("--group", type=int, default=3, metavar="N", help="episodes (task ids 0..N-1); ignored with --full")
+    ap.add_argument("--group", type=int, default=None, metavar="N", help="episodes (task ids 0..N-1); default 3, or the batch size with --batched; ignored with --full")
     ap.add_argument("--full", action="store_true", help="run the entire suite from full_bench_tasks.json (500 episodes; 6500 with --suite all)")
     ap.add_argument("--init-state", type=int, default=0, metavar="I", help="saved init state id (0..49)")
     ap.add_argument("--batched", type=int, default=0, metavar="N", help="run N rollouts off one batched GPU forward")
