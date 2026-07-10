@@ -1,0 +1,80 @@
+{
+  "control_rate": 80,
+  "features": {
+    "pixels/image": {
+      "role": "observation",
+      "type": "rgb"
+    },
+    "pixels/image2": {
+      "role": "observation",
+      "type": "rgb"
+    },
+    "robot_state/eef/pos": {
+      "role": "observation",
+      "names": [
+        "pos_0",
+        "pos_1",
+        "pos_2"
+      ]
+    },
+    "robot_state/eef/quat": {
+      "role": "observation",
+      "names": [
+        "quat_0",
+        "quat_1",
+        "quat_2",
+        "quat_3"
+      ]
+    },
+    "robot_state/gripper/qpos": {
+      "role": "observation",
+      "names": [
+        "qpos_0",
+        "qpos_1"
+      ]
+    },
+    "robot_state/gripper/qvel": {
+      "role": "observation",
+      "names": [
+        "qvel_0",
+        "qvel_1"
+      ]
+    },
+    "robot_state/joints/pos": {
+      "role": "observation",
+      "names": [
+        "pos_0",
+        "pos_1",
+        "pos_2",
+        "pos_3",
+        "pos_4",
+        "pos_5",
+        "pos_6"
+      ]
+    },
+    "robot_state/joints/vel": {
+      "role": "observation",
+      "names": [
+        "vel_0",
+        "vel_1",
+        "vel_2",
+        "vel_3",
+        "vel_4",
+        "vel_5",
+        "vel_6"
+      ]
+    },
+    "action": {
+      "role": "action",
+      "names": [
+        "act_0",
+        "act_1",
+        "act_2",
+        "act_3",
+        "act_4",
+        "act_5",
+        "act_6"
+      ]
+    }
+  }
+}

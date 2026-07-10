@@ -1,32 +1,18 @@
 [project]
 name = "robot-template"
 version = "0.1.0"
-description = "HUD v6 robot template: VLA policies x LIBERO, served over the openpi/0 robot capability"
+description = "SmolVLA x LIBERO over HUD's robot capability"
 requires-python = ">=3.11"
 
-# What the local harness needs to drive an env (run.py / examples / agents). The
-# heavy LIBERO sim stack is NOT here — it lives only inside Dockerfile.hud, since it
-# runs in the env container, never on your machine. Pairs with Dockerfile.hud to mark
-# this directory a deployable HUD environment (`hud deploy`).
+# What run.py needs locally. The heavy LIBERO sim stack is NOT here — it lives only
+# inside Dockerfile.hud, since it runs in the env container, never on your machine.
+# Pairs with Dockerfile.hud to mark this directory a deployable HUD env (`hud deploy`).
 #
-# NOTE: the v6 robot API isn't on PyPI yet — until it lands, install from git (see
-# QUICKSTART.md): pip install 'hud-python[robot] @ git+https://github.com/hud-evals/hud-python.git'
+# NOTE: env.gym / LeRobotAgent aren't on PyPI yet — until the release lands, install
+# from git (see README): pip install 'hud-python[robot] @ git+https://github.com/hud-evals/hud-python.git'
 dependencies = [
-    "hud-python[robot]>=0.6.5",  # Environment, RobotAgent/Model/Adapter, openpi/0 codec
-]
-
-[project.optional-dependencies]
-# Run a policy locally (run.py default, examples/local.py, examples/batched.py).
-# Needs a GPU to be quick; lerobot pulls torch + the policy classes.
-vla = [
-    "torch>=2.2",
-    "lerobot[smolvla]",
-]
-# Serve a policy on a GPU box and/or boot the env in the cloud (agents/remote/,
-# examples/remote.py). The eval machine itself needs none of this for --remote.
-serve = [
-    "modal>=0.64",
-    "websockets>=12.0",
+    "hud-python[robot]>=0.6.8",  # Environment, env.gym, LeRobotAgent, openpi/0 codec
+    "lerobot[smolvla]>=0.6.0",   # the policy (pulls torch; a GPU makes it quick)
 ]
 
 [tool.uv]

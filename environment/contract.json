@@ -1,0 +1,51 @@
+{
+  "robot_type": "franka_panda_libero",
+  "control_rate": 10,
+  "features": {
+    "observation/image": {
+      "role": "observation",
+      "type": "rgb",
+      "dtype": "image",
+      "shape": [256, 256, 3],
+      "names": ["height", "width", "channel"]
+    },
+    "observation/wrist_image": {
+      "role": "observation",
+      "type": "rgb",
+      "dtype": "image",
+      "shape": [256, 256, 3],
+      "names": ["height", "width", "channel"]
+    },
+    "observation/state": {
+      "role": "observation",
+      "type": "ee_abs",
+      "dtype": "float32",
+      "shape": [8],
+      "names": [
+        "robot0_eef_pos.x",
+        "robot0_eef_pos.y",
+        "robot0_eef_pos.z",
+        "robot0_eef_axis_angle.rx",
+        "robot0_eef_axis_angle.ry",
+        "robot0_eef_axis_angle.rz",
+        "robot0_gripper_qpos.finger_joint1",
+        "robot0_gripper_qpos.finger_joint2"
+      ]
+    },
+    "action": {
+      "role": "action",
+      "type": "ee_del",
+      "dtype": "float32",
+      "shape": [7],
+      "names": [
+        "delta_eef_pos.dx",
+        "delta_eef_pos.dy",
+        "delta_eef_pos.dz",
+        "delta_eef_axis_angle.drx",
+        "delta_eef_axis_angle.dry",
+        "delta_eef_axis_angle.drz",
+        "gripper.open_close"
+      ]
+    }
+  }
+}
