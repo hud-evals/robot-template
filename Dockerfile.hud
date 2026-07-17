@@ -11,9 +11,12 @@ ENV PYTHONUNBUFFERED=1
 ENV MUJOCO_GL=osmesa
 
 # git: pip install from git. libosmesa6-dev: software GL. libgl1 + libglib2.0-0:
-# opencv runtime libs. libegl1: optional GPU render path.
+# opencv runtime libs. libegl1: optional GPU render path. build-essential + cmake:
+# egl_probe/hf-egl-probe (LIBERO chain) ship as C-compiling sdists — slim has no
+# toolchain, and pip's cmake wheel isn't visible inside their isolated builds.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git libgl1 libosmesa6-dev libglew-dev libegl1 libglib2.0-0 patchelf \
+        build-essential cmake \
     && rm -rf /var/lib/apt/lists/*
 
 # CPU-only torch first: hf-libero's dep chain needs torch, and the default CUDA
@@ -21,12 +24,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu
 
 # The whole stack: lerobot[libero] (the make_env benchmark loader + hf-libero: sim
-# code, bddl files, init states) and the HUD SDK ([robot] extra = the openpi/0 wire
-# codec) — from git until the v6 robot release lands on PyPI. openpi-client over-pins
-# numpy<2; restore it after (numba, a robosuite dep, needs numpy<2.5).
-RUN pip install --no-cache-dir "lerobot[libero]" \
-        "hud-python[robot] @ git+https://github.com/hud-evals/hud-python.git" \
-    && pip install --no-cache-dir "numpy>=2.2,<2.5"
+# code, bddl files, init states) and the HUD SDK — from git until the v6 robot release
+# lands on PyPI. hud WITHOUT [robot]: openpi-client's numpy<2 pin is unsatisfiable next
+# to lerobot[libero] (rerun-sdk needs numpy>=2, so the joint resolve has NO solution).
+# openpi-client is a pure-python wire codec — install it --no-deps and supply its real
+# deps (av/msgpack/dm-tree) ourselves; the resolver then lands numpy 2.2.x on its own.
+RUN pip install --no-cache-dir "lerobot[libero]==0.6.0" \
+        "hud @ git+https://github.com/hud-evals/hud-python.git" \
+        "av>=12" "msgpack>=1.0.5" "dm-tree>=0.1.8" \
+    && pip install --no-cache-dir --no-deps "openpi-client>=0.1.2"
 
 WORKDIR /app
 COPY pyproject.toml ./
