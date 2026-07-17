@@ -9,7 +9,7 @@ The sim stack (MuJoCo, LIBERO) lives only in the Docker image; locally you insta
 the agent side (the policy + the HUD SDK):
 
 ```bash
-pip install 'hud-python[robot] @ git+https://github.com/hud-evals/hud-python.git' 'lerobot[smolvla]'
+pip install 'hud[robot] @ git+https://github.com/hud-evals/hud-python.git' 'lerobot[smolvla]'
 docker build -f Dockerfile.hud -t hud-libero-env .
 python run.py
 ```

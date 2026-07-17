@@ -9,12 +9,16 @@ requires-python = ">=3.11"
 # Pairs with Dockerfile.hud to mark this directory a deployable HUD env (`hud deploy`).
 #
 # NOTE: env.gym / LeRobotAgent aren't on PyPI yet — until the release lands, install
-# from git (see README): pip install 'hud-python[robot] @ git+https://github.com/hud-evals/hud-python.git'
+# from git (see README): pip install 'hud[robot] @ git+https://github.com/hud-evals/hud-python.git'
 dependencies = [
-    "hud-python[robot]>=0.6.8",  # Environment, env.gym, LeRobotAgent, openpi/0 codec
+    # git until the robot release lands in the PyPI wheel (env.gym / LeRobotAgent)
+    "hud[robot] @ git+https://github.com/hud-evals/hud-python.git",
     "lerobot[smolvla]>=0.6.0",   # the policy (pulls torch; a GPU makes it quick)
 ]
 
 [tool.uv]
 # Run in place (python run.py, hud serve environment/env:env), not installed.
 package = false
+# openpi-client (hud[robot]) over-pins numpy<2 — pure-python client, no ABI risk —
+# while lerobot>=0.6 needs numpy>=2. Override until openpi-client relaxes the pin.
+override-dependencies = ["numpy>=2.0,<2.3"]
