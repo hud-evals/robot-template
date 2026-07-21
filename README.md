@@ -1,15 +1,15 @@
 # robot-template
 
 SmolVLA driving the [LIBERO](https://libero-project.github.io/) benchmark over HUD's
-`robot` capability. `environment/env.py` declares the env (`env.gym` + one template),
-`environment/lerobot_sim.py` adapts lerobot's `make_env` (the task is an episodic
-template arg), and `run.py` is the agent and runner.
+`robot` capability. `environment/env.py` declares the env (`env.gym(make_env)` + one
+template), `environment/lerobot_sim.py` is the module-level factory (task is a build
+arg), and `run.py` is the agent and runner.
 
 The sim stack (MuJoCo, LIBERO) lives only in the Docker image; locally you install
 the agent side (the policy + the HUD SDK):
 
 ```bash
-pip install 'hud-python[robot] @ git+https://github.com/hud-evals/hud-python.git' 'lerobot[smolvla]'
+pip install 'hud[robot] @ git+https://github.com/hud-evals/hud-python.git' 'lerobot[smolvla]'
 docker build -f Dockerfile.hud -t hud-libero-env .
 python run.py
 ```

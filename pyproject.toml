@@ -7,11 +7,8 @@ requires-python = ">=3.11"
 # What run.py needs locally. The heavy LIBERO sim stack is NOT here — it lives only
 # inside Dockerfile.hud, since it runs in the env container, never on your machine.
 # Pairs with Dockerfile.hud to mark this directory a deployable HUD env (`hud deploy`).
-#
-# NOTE: env.gym / LeRobotAgent aren't on PyPI yet — until the release lands, install
-# from git (see README): pip install 'hud-python[robot] @ git+https://github.com/hud-evals/hud-python.git'
 dependencies = [
-    "hud-python[robot]>=0.6.8",  # Environment, env.gym, LeRobotAgent, openpi/0 codec
+    "hud[robot]>=0.6.10",        # Environment, env.gym, RobotAgent, openpi/0 codec
     "lerobot[smolvla]>=0.6.0",   # the policy (pulls torch; a GPU makes it quick)
 ]
 

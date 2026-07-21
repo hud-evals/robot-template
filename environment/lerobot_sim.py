@@ -1,12 +1,16 @@
-"""A lazy gym.Env over lerobot's ``make_env``: task selection is episodic.
+"""Module-level ``make_env`` for ``env.gym`` — task selection is a build arg.
 
-Builds on first reset and rebuilds only when (suite, task_id) changes, so one
-declarative env serves the whole benchmark — the task travels as reset args,
-not as construction args.
+``GymBridge`` rebuilds when factory kwargs (``task_suite`` / ``task_id``)
+change; ``seed`` stays episodic. Observations are repacked to the flat
+two-camera + 8-D state layout smolvla_libero trains on — the same packing
+lerobot's ``LiberoProcessorStep`` applies at train time — so the stock
+``LeRobotAdapter`` drives the policy with no custom adapter.
 """
 
 import os
 from pathlib import Path
+
+import numpy as np
 
 os.environ.setdefault("MUJOCO_GL", "egl")  # headless render
 
@@ -27,46 +31,34 @@ def ensure_libero_config() -> None:
     cfg.write_text(yaml.safe_dump({k: str(v) for k, v in paths.items()}))
 
 
-class LeRobotSim:
-    """Gym-shaped adapter; ``reset(options={"task_suite", "task_id"})`` picks the task."""
+def pack_observation(obs: dict) -> dict:
+    """LIBERO's nested obs → flat contract keys (two cameras + 8-D state)."""
+    rs = obs["robot_state"]
+    # eef quaternion (xyzw) → axis-angle, as in lerobot's LiberoProcessorStep.
+    quat = np.asarray(rs["eef"]["quat"], dtype=np.float32)
+    w = float(np.clip(quat[3], -1.0, 1.0))
+    den = float(np.sqrt(max(1.0 - w * w, 0.0)))
+    axisangle = quat[:3] * (2.0 * np.arccos(w) / den) if den > 1e-10 else np.zeros(3)
+    state = np.concatenate([rs["eef"]["pos"], axisangle, rs["gripper"]["qpos"]])
+    # Cameras flipped 180°: the HuggingFaceVLA/libero orientation convention.
+    return {
+        "observation/image": obs["pixels"]["image"][::-1, ::-1].copy(),
+        "observation/wrist_image": obs["pixels"]["image2"][::-1, ::-1].copy(),
+        "observation/state": state.astype(np.float32),
+    }
 
-    def __init__(self, suite: str = "libero_spatial", task_id: int = 0):
-        self._default = (suite, task_id)
-        self._key: tuple[str, int] | None = None
-        self._env = None
-        self.task_description = ""
 
-    def _ensure(self, suite: str, task_id: int) -> None:
-        if (suite, task_id) == self._key:
-            return
-        if self._env is not None:
-            self._env.close()
+def make_env(task_suite: str = "libero_spatial", task_id: int = 0):
+    """Build one LIBERO task env; ``GymBridge`` rebuilds when suite/id change."""
+    ensure_libero_config()
+    from gymnasium.wrappers import TransformObservation
+    from lerobot.envs.configs import LiberoEnv
+    from lerobot.envs.factory import make_env as lerobot_make_env
 
-        ensure_libero_config()
-        from lerobot.envs.configs import LiberoEnv
-        from lerobot.envs.factory import make_env
-
-        # Unwrap the vec-of-one to the plain gym.Env (task_description, is_success).
-        self._env = make_env(LiberoEnv(task=suite, task_ids=[task_id]), n_envs=1)[suite][task_id].envs[0]
-        self._key = (suite, task_id)
-        self.metadata = getattr(self._env, "metadata", {"render_fps": 10})
-        self.task_description = getattr(self._env, "task_description", "")
-
-    def reset(self, seed=None, options=None):
-        opts = dict(options or {})
-        suite = opts.pop("task_suite", self._default[0])
-        task_id = int(opts.pop("task_id", self._default[1]))
-        self._ensure(suite, task_id)
-        return self._env.reset(seed=seed)
-
-    def step(self, action):
-        return self._env.step(action)
-
-    def close(self):
-        if self._env is not None:
-            self._env.close()
-            self._env = None
-
-    @property
-    def action_space(self):
-        return self._env.action_space
+    # Unwrap the vec-of-one to the plain gym.Env; 256 = smolvla_libero's camera res.
+    env = lerobot_make_env(
+        LiberoEnv(task=task_suite, task_ids=[task_id],
+                  observation_height=256, observation_width=256),
+        n_envs=1,
+    )[task_suite][task_id].envs[0]
+    return TransformObservation(env, pack_observation, None)

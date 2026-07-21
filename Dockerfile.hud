@@ -22,10 +22,10 @@ RUN pip install --no-cache-dir torch==2.11.0 --index-url https://download.pytorc
 
 # The whole stack: lerobot[libero] (the make_env benchmark loader + hf-libero: sim
 # code, bddl files, init states) and the HUD SDK ([robot] extra = the openpi/0 wire
-# codec) — from git until the v6 robot release lands on PyPI. openpi-client over-pins
-# numpy<2; restore it after (numba, a robosuite dep, needs numpy<2.5).
+# codec). openpi-client over-pins numpy<2; restore it after (numba, a robosuite
+# dep, needs numpy<2.5).
 RUN pip install --no-cache-dir "lerobot[libero]" \
-        "hud-python[robot] @ git+https://github.com/hud-evals/hud-python.git" \
+        "hud[robot] @ git+https://github.com/hud-evals/hud-python.git" \
     && pip install --no-cache-dir "numpy>=2.2,<2.5"
 
 WORKDIR /app
