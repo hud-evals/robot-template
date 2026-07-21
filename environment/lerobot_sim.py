@@ -33,13 +33,17 @@ def ensure_libero_config() -> None:
 
 def pack_observation(obs: dict) -> dict:
     """LIBERO's nested obs → flat contract keys (two cameras + 8-D state)."""
-    rs = obs["robot_state"]
+    robot_state = obs["robot_state"]
     # eef quaternion (xyzw) → axis-angle, as in lerobot's LiberoProcessorStep.
-    quat = np.asarray(rs["eef"]["quat"], dtype=np.float32)
+    quat = np.asarray(robot_state["eef"]["quat"], dtype=np.float32)
     w = float(np.clip(quat[3], -1.0, 1.0))
-    den = float(np.sqrt(max(1.0 - w * w, 0.0)))
-    axisangle = quat[:3] * (2.0 * np.arccos(w) / den) if den > 1e-10 else np.zeros(3)
-    state = np.concatenate([rs["eef"]["pos"], axisangle, rs["gripper"]["qpos"]])
+    sin_half_angle = float(np.sqrt(max(1.0 - w * w, 0.0)))
+    axisangle = (
+        quat[:3] * (2.0 * np.arccos(w) / sin_half_angle) if sin_half_angle > 1e-10 else np.zeros(3)
+    )
+    state = np.concatenate(
+        [robot_state["eef"]["pos"], axisangle, robot_state["gripper"]["qpos"]]
+    )
     # Cameras flipped 180°: the HuggingFaceVLA/libero orientation convention.
     return {
         "observation/image": obs["pixels"]["image"][::-1, ::-1].copy(),

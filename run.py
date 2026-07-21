@@ -1,29 +1,27 @@
-"""SmolVLA x LIBERO: the whole benchmark from one Taskset.run.
+"""SmolVLA x LIBERO: run the benchmark and report a success rate.
 
-    docker build -f Dockerfile.hud -t hud-libero-env .
-    python run.py                     # 3 tasks of libero_spatial
-    python run.py --suite libero_goal -n 10
+    MUJOCO_GL=egl python run.py
 
-The sim stack lives in the image: each rollout boots a fresh container
-(DockerRuntime), and the task travels as template args over the wire. Only the
-policy runs here, so the local install needs lerobot for the checkpoint but no
-MuJoCo/LIBERO. With HUD_API_KEY set, rollouts stream to the trace viewer on hud.ai.
+With HUD_API_KEY set, rollouts stream to the trace viewer on hud.ai.
+See README for the Docker path (sim in a container, no local LIBERO).
 """
 
 from __future__ import annotations
 
-import argparse
 import asyncio
+from pathlib import Path
 
 import torch
 from lerobot.policies.factory import make_pre_post_processors
 from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
 
 from hud.agents.robot import LeRobotAdapter, LeRobotModel, RobotAgent
-from hud.eval import DockerRuntime, Task, Taskset
+from hud.eval import LocalRuntime, Task, Taskset
 
 CHECKPOINT = "lerobot/smolvla_libero"
-IMAGE = "hud-libero-env"  # built from Dockerfile.hud (see README)
+SUITE = "libero_spatial"  # LIBERO task suite
+N_TASKS = 3  # task ids 0..N_TASKS-1
+ENV_MODULE = Path(__file__).parent / "environment" / "env.py"
 
 
 class SmolVLAAgent(RobotAgent):
@@ -32,24 +30,24 @@ class SmolVLAAgent(RobotAgent):
     def __init__(self, checkpoint: str = CHECKPOINT) -> None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         policy = SmolVLAPolicy.from_pretrained(checkpoint).to(device).eval()
-        pre, post = make_pre_post_processors(
+        preprocess, postprocess = make_pre_post_processors(
             policy.config,
             checkpoint,
             preprocessor_overrides={"device_processor": {"device": device}},
         )
-        self.model = LeRobotModel(policy, pre, post)
+        self.model = LeRobotModel(policy, preprocess, postprocess)
         self.adapter = LeRobotAdapter(model_image_keys=list(policy.config.image_features))
 
 
-async def main(args: argparse.Namespace) -> None:
+async def main() -> None:
     tasks = [
-        Task(env="libero", id="episode", args={"task_suite": args.suite, "task_id": t})
-        for t in range(args.n)
+        Task(env="libero", id="episode", args={"task_suite": SUITE, "task_id": t})
+        for t in range(N_TASKS)
     ]
+    # LocalRuntime runs the sim in-process; swap in DockerRuntime for the container path (README).
     job = await Taskset("smolvla-libero", tasks).run(
-        SmolVLAAgent(args.checkpoint),
-        runtime=DockerRuntime(IMAGE),
-        max_concurrent=args.max_concurrent,
+        SmolVLAAgent(),
+        runtime=LocalRuntime(ENV_MODULE, ready_timeout=600.0),
     )
 
     rewards = [run.reward or 0.0 for run in job.runs]
@@ -57,13 +55,9 @@ async def main(args: argparse.Namespace) -> None:
         print(f"  {task.args} -> reward={reward}")
     n = len(rewards) or 1
     print(f"\nsuccess_rate={sum(rewards) / n:.2f} ({sum(rewards):.0f}/{n})")
+    if getattr(job, "id", None):
+        print(f"job=https://hud.ai/jobs/{job.id}")
 
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(description="SmolVLA x LIBERO; report a success rate.")
-    ap.add_argument("--suite", default="libero_spatial", help="LIBERO task suite")
-    ap.add_argument("-n", type=int, default=3, help="tasks (task ids 0..n-1)")
-    ap.add_argument("--checkpoint", default=CHECKPOINT, help="LeRobot policy checkpoint")
-    ap.add_argument("--max-concurrent", type=int, default=1,
-                    help="parallel rollouts (each boots its own container)")
-    asyncio.run(main(ap.parse_args()))
+    asyncio.run(main())

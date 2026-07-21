@@ -4,14 +4,10 @@ version = "0.1.0"
 description = "SmolVLA x LIBERO over HUD's robot capability"
 requires-python = ">=3.11"
 
-# What run.py needs locally. The heavy LIBERO sim stack is NOT here — it lives only
-# inside Dockerfile.hud, since it runs in the env container, never on your machine.
-# Pairs with Dockerfile.hud to mark this directory a deployable HUD env (`hud deploy`).
 dependencies = [
-    "hud[robot]>=0.6.10",        # Environment, env.gym, RobotAgent, openpi/0 codec
-    "lerobot[smolvla]>=0.6.0",   # the policy (pulls torch; a GPU makes it quick)
+    "hud[robot]>=0.6.10",              # Environment, env.gym, RobotAgent, openpi/0 codec
+    "lerobot[smolvla,libero]>=0.6.0",  # the policy + the LIBERO sim (pulls torch)
 ]
 
 [tool.uv]
-# Run in place (python run.py, hud serve environment/env:env), not installed.
-package = false
+package = false  # run in place (python run.py), not installed

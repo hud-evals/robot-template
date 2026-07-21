@@ -12,14 +12,14 @@
     "observation/state": {
       "role": "observation",
       "names": [
-        "eef_pos_0",
-        "eef_pos_1",
-        "eef_pos_2",
-        "eef_axisangle_0",
-        "eef_axisangle_1",
-        "eef_axisangle_2",
-        "gripper_0",
-        "gripper_1"
+        "state_0",
+        "state_1",
+        "state_2",
+        "state_3",
+        "state_4",
+        "state_5",
+        "state_6",
+        "state_7"
       ]
     },
     "action": {

@@ -1,29 +1,19 @@
-# The LIBERO env image. `hud build` / `hud deploy` pick this file up by name and
-# register the env under the name in environment/env.py's `Environment(name="libero")`.
-# It is the same image DockerRuntime("hud-libero-env") boots in run.py.
-#
-# One port: 8765, the HUD control channel. The robot WebSocket binds an ephemeral
-# container-loopback port that agents reach through the control channel's tunnel.
+# The LIBERO env image, served over the HUD control channel on port 8765.
+# `hud deploy` and DockerRuntime("hud-libero-env") both boot it.
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1
-# Headless software GL so MuJoCo renders on a CPU-only container (no display/GPU).
-ENV MUJOCO_GL=osmesa
+ENV MUJOCO_GL=osmesa  # headless software GL (CPU-only container, no display/GPU)
 
-# git: pip install from git. libosmesa6-dev: software GL. libgl1 + libglib2.0-0:
-# opencv runtime libs. libegl1: optional GPU render path.
+# git: pip from git. libosmesa6-dev/libegl1: software/GPU GL. libgl1 + libglib2.0-0: opencv libs.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git libgl1 libosmesa6-dev libglew-dev libegl1 libglib2.0-0 patchelf \
     && rm -rf /var/lib/apt/lists/*
 
-# CPU-only torch first: hf-libero's dep chain needs torch, and the default CUDA
-# wheels would add ~5 GB for nothing (the policy runs agent-side).
+# CPU-only torch first: the policy runs agent-side, so skip the ~5 GB CUDA wheels.
 RUN pip install --no-cache-dir torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu
 
-# The whole stack: lerobot[libero] (the make_env benchmark loader + hf-libero: sim
-# code, bddl files, init states) and the HUD SDK ([robot] extra = the openpi/0 wire
-# codec). openpi-client over-pins numpy<2; restore it after (numba, a robosuite
-# dep, needs numpy<2.5).
+# The sim stack + HUD SDK. openpi-client over-pins numpy<2; restore it (numba needs numpy<2.5).
 RUN pip install --no-cache-dir "lerobot[libero]" \
         "hud[robot] @ git+https://github.com/hud-evals/hud-python.git" \
     && pip install --no-cache-dir "numpy>=2.2,<2.5"
@@ -39,6 +29,5 @@ from lerobot_sim import ensure_libero_config; ensure_libero_config(); \
 from libero.libero import get_assets_path; get_assets_path()"
 
 EXPOSE 8765
-# Serve the v6 control channel. `hud deploy` reads "environment/env" from this CMD,
-# resolves environment/env.py, and registers the env by its Environment(name=...).
+# Serve the control channel; `hud deploy` registers the env by its Environment(name=...).
 CMD ["hud", "serve", "environment/env:env", "--host", "0.0.0.0", "--port", "8765"]
