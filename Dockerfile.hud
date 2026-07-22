@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir torch==2.11.0 --index-url https://download.pytorc
 
 # The sim stack + HUD SDK. openpi-client over-pins numpy<2; restore it (numba needs numpy<2.5).
 RUN pip install --no-cache-dir "lerobot[libero]" \
-        "hud[robot] @ git+https://github.com/hud-evals/hud-python.git" \
+        "hud[robot]" \
     && pip install --no-cache-dir "numpy>=2.2,<2.5"
 
 WORKDIR /app

@@ -5,7 +5,7 @@ SmolVLA driving the [LIBERO](https://libero-project.github.io/) benchmark over H
 is the module-level sim factory (task is a build arg), and `run.py` is the agent and runner.
 
 ```bash
-pip install 'hud[robot] @ git+https://github.com/hud-evals/hud-python.git' 'lerobot[smolvla,libero]'
+pip install 'hud[robot]' 'lerobot[smolvla,libero]'
 MUJOCO_GL=egl python run.py
 ```
 
